@@ -1,4 +1,4 @@
-let project = new Project('haxerecast');
+let project = new Project('haxerecast', __dirname);
 
 project.addFile('cpp/Recast/**');
 project.addIncludeDir('cpp/Recast');
