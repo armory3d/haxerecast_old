@@ -1,4 +1,4 @@
-var project = new Project('haxerecast');
+let project = new Project('haxerecast');
 
 project.addFile('cpp/Recast/**');
 project.addIncludeDir('cpp/Recast');
@@ -12,4 +12,4 @@ project.addIncludeDir('cpp/DetourCrowd');
 project.addFile('cpp/DetourTileCache/**');
 project.addIncludeDir('cpp/DetourTileCache');
 
-return project;
+resolve(project);
