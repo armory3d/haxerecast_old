@@ -1080,11 +1080,11 @@ void _findPath(float startPosX, float startPosY, float startPosZ,
 				}
 			}
 		}
-		delete straightPath;
-		delete straightPathFlags;
-		delete straightPathRefs;
+		delete[] straightPath;
+		delete[] straightPathFlags;
+		delete[] straightPathRefs;
 	}
-	delete path;
+	delete[] path;
 
 	// sprintf(buff, "Module.__RECAST_CALLBACKS[%u](__tmp_recastjs_data);", callback);
 	// emscripten_run_script(buff);
