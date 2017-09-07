@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <float.h>
 #include <memory.h>
-#include <sys/time.h>
+// #include <sys/time.h>
 
 #include <random>
 #include <string>
@@ -1012,7 +1012,7 @@ void _findPath(float startPosX, float startPosY, float startPosZ,
 
 	dtStatus status;
 
-	dtPolyRef path[maxPath+1];
+	dtPolyRef* path = new dtPolyRef[maxPath+1];
 	int pathCount;
 
 	dtQueryFilter filter;
@@ -1045,9 +1045,9 @@ void _findPath(float startPosX, float startPosY, float startPosZ,
 	} else {
 		// printf("Found a %u polysteps path \n", pathCount);
 
-		float straightPath[maxPath*3];
-		unsigned char straightPathFlags[maxPath];
-		dtPolyRef straightPathRefs[maxPath];
+		float* straightPath = new float[maxPath*3];
+		unsigned char* straightPathFlags = new unsigned char[maxPath];
+		dtPolyRef* straightPathRefs = new dtPolyRef[maxPath];
 		int straightPathCount = 0;
 
 		int maxStraightPath = maxPath;
@@ -1080,7 +1080,11 @@ void _findPath(float startPosX, float startPosY, float startPosZ,
 				}
 			}
 		}
+		delete straightPath;
+		delete straightPathFlags;
+		delete straightPathRefs;
 	}
+	delete path;
 
 	// sprintf(buff, "Module.__RECAST_CALLBACKS[%u](__tmp_recastjs_data);", callback);
 	// emscripten_run_script(buff);
