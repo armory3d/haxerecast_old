@@ -30,6 +30,24 @@ class Recast {
 		#end
 	}
 
+	public function settings(s:Map<String,Float>):Void {
+		#if js
+		hrecast.set_cellSize(s['cellSize']);
+		hrecast.set_cellHeight(s['cellHeight']);
+		hrecast.set_agentHeight(s['agentHeight']);
+		hrecast.set_agentRadius(s['agentRadius']);
+		hrecast.set_agentMaxClimb(s['agentMaxClimb']);
+		hrecast.set_agentMaxSlope(s['agentMaxSlope']);
+		#else
+		HaxeRecast.set_cellSize(s['cellSize']);
+		HaxeRecast.set_cellHeight(s['cellHeight']);
+		HaxeRecast.set_agentHeight(s['agentHeight']);
+		HaxeRecast.set_agentRadius(s['agentRadius']);
+		HaxeRecast.set_agentMaxClimb(s['agentMaxClimb']);
+		HaxeRecast.set_agentMaxSlope(s['agentMaxSlope']);
+		#end
+	}
+
 	public function buildSolo():Void {
 		#if js
 		hrecast.buildSolo();
@@ -71,6 +89,13 @@ extern class HaxeRecast {
 	// untyped recast.cb()
 	public function OBJDataLoader(data:String, done:Void->Void):Void;
 	public function buildSolo():Void;
+	public function settings(settings:Map<String,Float>):Void;
+	public function set_cellSize(val:Float):Void;
+	public function set_cellHeight(val:Float):Void;
+	public function set_agentHeight(val:Float):Void;
+	public function set_agentRadius(val:Float):Void;
+	public function set_agentMaxClimb(val:Float):Void;
+	public function set_agentMaxSlope(val:Float):Void;
 	// public function buildTiled():Void;
 	public function getRandomPoint(callback:Dynamic):Void;
 	// callback:Float->Float->Float
@@ -90,6 +115,20 @@ extern class HaxeRecast {
 	public static function OBJDataLoader(data:String):Void; // initWithFileContent
 	@:native("HaxeRecast::buildSolo")
 	public static function buildSolo():Void;
+	@:native("HaxeRecast::settings")
+	public static function settings(settings:Map<String,Float>):Void;
+	@:native("HaxeRecast::set_cellSize")
+	public static function set_cellSize(val:Float):Void;
+	@:native("HaxeRecast::set_cellHeight")
+	public static function set_cellHeight(val:Float):Void;
+	@:native("HaxeRecast::set_agentHeight")
+	public static function set_agentHeight(val:Float):Void;
+	@:native("HaxeRecast::set_agentRadius")
+	public static function set_agentRadius(val:Float):Void;
+	@:native("HaxeRecast::set_agentMaxClimb")
+	public static function set_agentMaxClimb(val:Float):Void;
+	@:native("HaxeRecast::set_agentMaxSlope")
+	public static function set_agentMaxSlope(val:Float):Void;
 	// @:native("HaxeRecast::getRandomPoint")
 	// public static function getRandomPoint(callback:Dynamic):Void;
 	@:native("HaxeRecast::findPath")

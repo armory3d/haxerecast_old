@@ -1,0 +1,140 @@
+"use strict";
+
+var fs = require("fs");
+var recast = require("../haxerecast/js/recast/recast");
+
+var THREE = require("../armory_tools/threejs/three.tools");
+
+var path_mesh = '';
+if(process.argv.length > 2){
+    path_mesh = '.' + process.argv[2] + '.obj';
+    recast.OBJLoader(path_mesh, function() {
+        var rcPolyMesh = {};
+        var rcPolyMeshDetail = {};
+        var settings;
+        
+        if (process.argv[3] !== undefined) {
+            settings = JSON.parse(process.argv[3]);
+            recast.settings(settings);
+        }
+
+        recast.buildSolo();
+        
+        recast.get_rcPolyMesh( recast.cb( function ( rcpolymesh ) {
+            rcPolyMesh = rcpolymesh;
+        }));
+
+        recast.get_rcPolyMeshDetail( recast.cb( function ( rcpolymeshdetail ) {
+            rcPolyMeshDetail = rcpolymeshdetail;
+        }));
+        if (rcPolyMesh !== undefined && rcPolyMeshDetail !== undefined) {
+            var navObject = createMeshFromVertices( rcPolyMesh, rcPolyMeshDetail);
+
+            var navMesh = mergeGeometry(navObject);
+
+            var navMeshObj = saveGeometryToObj(navMesh);
+
+            fs.writeFile(path_mesh, navMeshObj, function (err) {
+                if (err) throw err;
+            });    
+        }    
+    });
+}
+//https://stackoverflow.com/questions/19559395/merging-an-entire-object3d-mesh-hierarchy-together
+function mergeGeometry (obj){
+    var newGeo = new THREE.Geometry();
+    obj.traverse(function(child){
+        if(child.parent){
+            child.updateMatrixWorld();
+            child.applyMatrix(child.parent.matrixWorld);    
+        }
+        THREE.GeometryUtils.merge(newGeo, child);
+    });
+    return newGeo;
+}
+
+function saveGeometryToObj (geometry) {
+    var buffer = '';
+    
+    var verts = geometry.vertices;
+    for (var i in verts) buffer += 'v ' + (verts[i].x) + ' ' + verts[i].y + ' ' + verts[i].z + '\n';
+
+    var faces = geometry.faces;
+    for (var i in faces) {
+        buffer += 'f ' + (faces[i].a + 1) + ' ' + (faces[i].b + 1) + ' ' + (faces[i].c + 1);    
+        if (faces[i].d !== undefined) buffer += ' ' + (faces[i].d + 1);
+        buffer += '\n';
+    }
+
+    return buffer;
+}
+
+// original script from blender-2.79b/source/blender/editors/mesh/mesh_navmesh.c 
+// http://www.letworyinteractive.com/blendercode/dd/de9/mesh__navmesh_8c_source.html#l00292
+function createMeshFromVertices (rcpolymesh, rcpolymeshdetail) {
+
+    var nmeshes = rcpolymeshdetail.nmeshes;
+    var meshes = rcpolymeshdetail.meshes;
+
+    var parent = new THREE.Object3D();
+
+    var dummyMaterial = new THREE.MeshBasicMaterial();
+
+    var materials = [ dummyMaterial ];
+
+    var new_verts=[];
+    var verts = rcpolymesh.verts;
+    
+    for (var i = 0; i < rcpolymesh.nverts; i++){
+        var x = rcpolymesh.boundbox.bmin[0] + verts[(i * 3) + 0] * rcpolymesh.cell.cs;
+        var y = rcpolymesh.boundbox.bmin[1] + verts[(i * 3) + 1] * rcpolymesh.cell.ch;
+        var z = rcpolymesh.boundbox.bmin[2] + verts[(i * 3) + 2] * rcpolymesh.cell.cs;
+        new_verts.push({'x':x,'y':z,'z':y});
+    }
+
+    for (var i = 0; i < nmeshes; i++) {
+        
+        var uniquevbase = new_verts.length;
+        var nvp = rcpolymesh.nvp;
+        var vbase = meshes[4 * i + 0];
+		var ndv = meshes[4 * i + 1];
+		var tribase = meshes[4 * i + 2];
+		var trinum = meshes[4 * i + 3];
+		var p = (i * nvp * 2);
+        var nv = 0;
+        
+        for (j = 0; j < nvp; ++j) {
+			if (rcpolymesh.polys[p + j] == 0xffff) break;
+			nv++;
+        }
+
+        for (var j = nv; j < ndv; j++) {
+            var x = rcpolymeshdetail.verts[3 * (vbase + j) + 0];
+            var y = rcpolymeshdetail.verts[3 * (vbase + j) + 1];
+            var z = rcpolymeshdetail.verts[3 * (vbase + j) + 2];
+            new_verts.push({'x':x,'y':z,'z':y});
+        }
+
+        for (var j = 0; j < trinum; j++) {
+            var tri = (4 * (tribase + j));
+            var face = [];
+			for (var k = 0; k < 3; k++) {
+				if (rcpolymeshdetail.tris[tri + k] < nv)
+					face.push(rcpolymesh.polys[p + rcpolymeshdetail.tris[tri + k]]);  /* shared vertex */
+				else
+					face.push(uniquevbase + rcpolymeshdetail.tris[tri + k] - nv);  /* unique vertex */
+            }
+
+            var geometry = new THREE.ConvexGeometry([
+                new THREE.Vector3( new_verts[face[0]].x, new_verts[face[0]].y, new_verts[face[0]].z ), 
+                new THREE.Vector3( new_verts[face[2]].x, new_verts[face[2]].y, new_verts[face[2]].z ),
+                new THREE.Vector3( new_verts[face[1]].x, new_verts[face[1]].y, new_verts[face[1]].z )
+            ]);
+    
+            var child = THREE.SceneUtils.createMultiMaterialObject(geometry, materials);
+            parent.add(child);
+		}
+    }  
+    return parent;
+}
+// https://github.com/vincent/recastjs-editor/blob/master/threejs/BufferGeometryUtils.js
