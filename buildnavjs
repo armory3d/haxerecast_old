@@ -7,7 +7,7 @@ var THREE = require("../armory_tools/threejs/three.tools");
 
 var path_mesh = '';
 if(process.argv.length > 2){
-    path_mesh = '.' + process.argv[2] + '.obj';
+    path_mesh = './' + process.argv[2] + '.obj';
     recast.OBJLoader(path_mesh, function() {
         var rcPolyMesh = {};
         var rcPolyMeshDetail = {};
