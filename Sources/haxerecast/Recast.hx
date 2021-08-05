@@ -17,7 +17,7 @@ class Recast {
 
 	public function new() {
 		#if js
-		hrecast = untyped __js__("(1, eval)('this').recast");
+		hrecast = js.Syntax.code("(1, eval)('this').recast");
 		#end
 	}
 
